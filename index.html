@@ -1,0 +1,120 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+	<meta charset="UTF-8">
+	<link rel="stylesheet" href="https://unpkg.com/purecss@1.0.0/build/pure-min.css" integrity="sha384-nn4HPE8lTHyVtfCBi5yW9d20FjT8BJwUXyWZT9InLYax14RDjBj46LmSztkmNP9w" crossorigin="anonymous">
+</head>
+
+<body>
+
+<input id="file" type="file">
+<button onclick="read()" class="pure-button pure-button-primary">Carregar</button>
+<br>
+<br>
+<button id="voltar" onclick="voltar()" disabled class="pure-button pure-button-primary">Voltar</button>
+<br>
+<br>
+<table border="1" class="pure-table pure-table-horizontal">
+	<thead></thead>
+	<tbody></tbody>
+</table>
+
+<script>
+
+(function (window, document) {
+	'use strict';
+	
+	const fileInput = document.getElementById('file');
+	const reader = new FileReader();
+	const thead = document.getElementsByTagName('thead')[0];
+	const tbody = document.getElementsByTagName('tbody')[0];
+	const voltarButton = document.getElementById('voltar');
+	const pilha = [];
+	
+	reader.onload = ev => {
+		let content = JSON.parse(ev.target.result);
+		createTable(content);
+	}
+	
+	function createTable(list) {
+		clearTable();
+		
+		if (!(list instanceof Array)) {
+			console.log("param is not an Array");
+			return;
+		}
+		
+		let tr = document.createElement('tr');
+		for (let attrib in list[0]) {
+			let td = document.createElement('td');
+			td.innerText = attrib;
+			tr.appendChild(td);
+		}
+		thead.appendChild(tr);
+		
+		list.forEach((obj, index) => {
+			if (index < 100) tbody.appendChild(createTableRow(obj, list));
+		});
+	}
+	
+	function createTableRow(obj, prev) {
+		let tr = document.createElement('tr');
+		for (let attrib in obj) {
+			let td = document.createElement('td');
+			if (typeof obj[attrib] === 'object') {
+				td.appendChild(createNavButton(obj[attrib], attrib, prev));
+			} else {
+				td.innerText = obj[attrib];
+			}
+			tr.appendChild(td);
+		}
+		return tr;
+	}
+	
+	function clearTable() {
+		thead.innerHTML = '';
+		tbody.innerHTML = '';
+	}
+	
+	function createNavButton(obj, attrib, prev) {
+		let button = document.createElement('button');
+		button.innerText = attrib;
+		button.className = 'pure-button pure-button-primary';
+		if (obj instanceof Array) {
+			button.onclick = () => {
+				addBreadcrumb(prev);
+				createTable(obj);
+			}
+		} else {
+			button.onclick = () => {
+				addBreadcrumb(prev);
+				createTableRow(obj);
+			}
+		}
+		return button;
+	}
+	
+	function addBreadcrumb(obj) {
+		pilha.push(obj);
+		voltarButton.disabled = false;
+	}
+	
+	window.voltar = () => {
+		if (pilha.length > 0) {
+			let obj = pilha.pop();
+			createTable(obj);
+		}
+		if (pilha === 0) {
+			voltarButton.disabled = true;
+		}
+	}
+	
+	window.read = () => {
+		let file = fileInput.files[0];
+		reader.readAsText(file);
+	}
+})(window, document);
+
+</script>
+</body>
+</html>

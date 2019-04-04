@@ -7,17 +7,18 @@
 
 <body>
 
-<input id="file" type="file">
-<button onclick="read()" class="pure-button pure-button-primary">Carregar</button>
-<br>
-<br>
-<button id="voltar" onclick="voltar()" disabled class="pure-button pure-button-primary">Voltar</button>
-<br>
-<br>
-<table border="1" class="pure-table pure-table-horizontal">
-	<thead></thead>
-	<tbody></tbody>
-</table>
+<center>
+	<input id="file" type="file">
+	<button onclick="read()" class="pure-button pure-button-primary">Carregar</button>
+	<br><br>
+	<button id="voltar" onclick="voltar()" disabled class="pure-button pure-button-primary">Voltar</button>
+	<br><br>
+	<table border="1" class="pure-table pure-table-horizontal">
+		<thead></thead>
+		<tbody></tbody>
+	</table>
+	<div id="paginacao"></div>
+</center>
 
 <script>
 
@@ -29,15 +30,19 @@
 	const thead = document.getElementsByTagName('thead')[0];
 	const tbody = document.getElementsByTagName('tbody')[0];
 	const voltarButton = document.getElementById('voltar');
+	const paginacao = document.getElementById('paginacao');
 	const pilha = [];
+	const MAX_ELM = 100;
 	
 	reader.onload = ev => {
 		let content = JSON.parse(ev.target.result);
 		createTable(content);
 	}
 	
-	function createTable(list) {
+	function createTable(list, page) {
+		if (page == undefined) page = 0;
 		clearTable();
+		createPagButtons(list, MAX_ELM, page);
 		
 		if (!(list instanceof Array)) {
 			console.log("param is not an Array");
@@ -52,7 +57,9 @@
 		}
 		thead.appendChild(tr);
 		
-		list.forEach(obj => tbody.appendChild(createTableRow(obj, list)));
+		let first = page * MAX_ELM;
+		let last = first + MAX_ELM;
+		list.slice(first, last).forEach(obj => tbody.appendChild(createTableRow(obj, list)));
 	}
 	
 	function createTableRow(obj, prev) {
@@ -72,6 +79,19 @@
 	function clearTable() {
 		thead.innerHTML = '';
 		tbody.innerHTML = '';
+	}
+	
+	function createPagButtons(list, numElm, page) {
+		paginacao.innerHTML = '';
+		let numPag = Math.ceil(list.length / numElm);
+		for (let i = 0; i < numPag; i++) {
+			let pagina = document.createElement('button');
+			pagina.innerText = i;
+			pagina.className = 'pure-button pure-button-primary';
+			pagina.onclick = () => createTable(list, i);
+			if (page === i) pagina.disabled = true;
+			paginacao.appendChild(pagina);
+		}
 	}
 	
 	function createNavButton(obj, attrib, prev) {

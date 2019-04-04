@@ -52,9 +52,7 @@
 		}
 		thead.appendChild(tr);
 		
-		list.forEach((obj, index) => {
-			if (index < 100) tbody.appendChild(createTableRow(obj, list));
-		});
+		list.forEach(obj => tbody.appendChild(createTableRow(obj, list)));
 	}
 	
 	function createTableRow(obj, prev) {

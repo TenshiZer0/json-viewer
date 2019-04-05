@@ -13,6 +13,10 @@
 	<br><br>
 	<button id="voltar" onclick="voltar()" disabled class="pure-button pure-button-primary">Voltar</button>
 	<br><br>
+	<div id="loading-label" hidden>
+		<p>Carregando...</p>
+		<br><br>
+	</div>
 	<table border="1" class="pure-table pure-table-horizontal">
 		<thead></thead>
 		<tbody></tbody>
@@ -30,6 +34,7 @@
 	const thead = document.getElementsByTagName('thead')[0];
 	const tbody = document.getElementsByTagName('tbody')[0];
 	const voltarButton = document.getElementById('voltar');
+	const loadingLabel = document.getElementById('loading-label');
 	const paginacao = document.getElementById('paginacao');
 	const pilha = [];
 	const MAX_ELM = 100;
@@ -37,7 +42,9 @@
 	reader.onload = ev => {
 		let content = JSON.parse(ev.target.result);
 		if (!(content instanceof Array)) content = [content];
+		pilha.length = 0;
 		createTable(content);
+		loadingLabel.hidden = true;
 	}
 	
 	function createTable(list, page) {
@@ -51,16 +58,43 @@
 		}
 		
 		let tr = document.createElement('tr');
-		for (let attrib in list[0]) {
+		let element = list[0];
+		if (element instanceof Array) {
 			let td = document.createElement('td');
-			td.innerText = attrib;
+			td.innerText = 'Array';
+			tr.appendChild(td);
+		} else if (typeof element === 'object' && element !== null) {
+			for (let attrib in element) {
+				let td = document.createElement('td');
+				td.innerText = attrib;
+				tr.appendChild(td);
+			}
+		} else {
+			let td = document.createElement('td');
+			td.innerText = (typeof element);
 			tr.appendChild(td);
 		}
 		thead.appendChild(tr);
 		
 		let first = page * MAX_ELM;
 		let last = first + MAX_ELM;
-		list.slice(first, last).forEach(obj => tbody.appendChild(createTableRow(obj, list)));
+		list.slice(first, last).forEach(obj => {
+			if (obj instanceof Array) {
+				let tr = document.createElement('tr');
+				let td = document.createElement('td');
+				td.appendChild(createNavButton(obj, 'Array', list));
+				tr.appendChild(td);
+				tbody.appendChild(tr);
+			} else if (typeof obj === 'object' && obj !== null) {
+				tbody.appendChild(createTableRow(obj, list));
+			} else {
+				let tr = document.createElement('tr');
+				let td = document.createElement('td');
+				td.innerText = obj === null ? 'null' : obj;
+				tr.appendChild(td);
+				tbody.appendChild(tr);
+			}
+		});
 	}
 	
 	function createTableRow(obj, prev) {
@@ -165,6 +199,7 @@
 	}
 	
 	window.read = () => {
+		loadingLabel.hidden = false;
 		let file = fileInput.files[0];
 		reader.readAsText(file);
 	}
